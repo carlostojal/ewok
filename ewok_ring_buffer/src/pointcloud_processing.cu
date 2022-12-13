@@ -2,6 +2,8 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
+#define THREADS_PER_BLOCK 1024
+
 // gets the voxel index of a point in global cartesian space
 // intended to be called once for each idx element
 // as this will be launched from a device (from the "CudaProcessPointCloud" kernel),
@@ -124,8 +126,9 @@ int cuda_pointcloud_processing_main(uint16_t *occupancy_buffer, int N, float res
 	// TODO: allocate the pointers on device memory and copy
 	
 	// call the kernel
+	int n_blocks = ceil((N*N) / THREADS_PER_BLOCK);
 	dim3 thread_shape(n_points, 4);
-	CudaProcessPointCloud<<<1, thread_shape>>>(nullptr, 0, 0.0f, nullptr, N);
+	CudaProcessPointCloud<<<n_blocks, thread_shape>>>(nullptr, 0, 0.0f, nullptr, N);
 
 	// wait for the threads completion
 	if((err = cudaDeviceSynchronize()) != cudaSuccess) {
