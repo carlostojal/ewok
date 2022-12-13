@@ -130,6 +130,22 @@ class RaycastRingBuffer {
       Vector3i idx;
       occupancy_buffer_.getIdx(v, idx);
 
+      /*
+      // occupancy buffer data examination
+      std::cout << "Occupancy" << std::endl;
+      std::vector<_Datatype> buffer_;
+      occupancy_buffer_.getBuffer(buffer_);
+      std::cout << buffer_.data()[0] << std::endl;
+
+      // index data examination
+      std::cout << "Index" << std::endl;
+      std::cout << idx.data()[0] << " " << idx.data()[1] << " " << idx.data()[2] << std::endl;
+
+      // cloud data examination
+      std::cout << "Pointcloud\tType: " << typeid(cloud.data()[0].data()[0]).name() << std::endl;
+      std::cout << cloud.data()[0].data()[0] << std::endl;
+      */
+
       if (occupancy_buffer_.insideVolume(idx)) {
         flag_buffer_.at(idx) |= occupied_flag;
 

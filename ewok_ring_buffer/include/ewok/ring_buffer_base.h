@@ -26,6 +26,7 @@
 
 #include <Eigen/Dense>
 
+#include <ewok/cuda_common.h>
 #include <visualization_msgs/Marker.h>
 
 #include <vector>
@@ -78,6 +79,10 @@ class RingBufferBase {
 
   inline void getOffset(Vector3i & o) const {
       o = offset_;
+  }
+
+  inline void getBuffer(std::vector<_Datatype> & b) const {
+    b = buffer_;
   }
 
   // Moves 1 step in the direction
