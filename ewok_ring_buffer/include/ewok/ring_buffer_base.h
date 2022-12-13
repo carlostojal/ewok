@@ -29,6 +29,7 @@
 #include <visualization_msgs/Marker.h>
 
 #include <vector>
+#include <thread>
 #include <algorithm>
 
 
@@ -58,8 +59,16 @@ class RingBufferBase {
   virtual ~RingBufferBase() {
   }
 
+  _Datatype & getEmptyElement() {
+    return empty_element_;
+  }
+
   void setEmptyElement(const _Datatype & e) {
       empty_element_ = e;
+  }
+
+  Vector3i & getOffset() {
+    return offset_;
   }
 
   virtual void setOffset(const Vector3i & offset) {
@@ -83,31 +92,46 @@ class RingBufferBase {
   // Moves 1 step in the direction
   virtual void moveVolume(const Vector3i &direction) {
 
-      for (int axis = 0; axis < 3; axis++) {
-          if (direction[axis] != 0) {
+    std::vector<std::thread> threads;
 
-              int slice;
+    auto moveOnAxisLambda = [&](ewok::RingBufferBase<_POW, _Datatype, _Scalar> *context, ewok::RingBufferBase<_POW, _Datatype, _Scalar>::Vector3i direction, int axis) {
+        
+        if (direction[axis] != 0) {
 
-              if (direction[axis] > 0) {
-                  offset_[axis]++;
-                  slice = offset_[axis] + _N - 1;
-              } else {
-                  offset_[axis]--;
-                  slice = offset_[axis];
-              }
+            int slice;
 
-              switch (axis) {
-                  case 0:setXSlice(slice, empty_element_);
-                  break;
-                  case 1:setYSlice(slice, empty_element_);
-                  break;
-                  case 2:setZSlice(slice, empty_element_);
-                  break;
+            if (direction[axis] > 0) {
+                context->getOffset()[axis]++;
+                slice = context->getOffset()[axis] + _N - 1;
+            } else {
+                context->getOffset()[axis]--;
+                slice = context->getOffset()[axis];
+            }
 
-              }
+            switch (axis) {
+                case 0:context->setXSlice(slice, context->getEmptyElement());
+                break;
+                case 1:context->setYSlice(slice, context->getEmptyElement());
+                break;
+                case 2:context->setZSlice(slice, context->getEmptyElement());
+                break;
 
-          }
-      }
+            }
+
+        }
+    };
+
+    // create the threads
+    // with this, the three axes are moved simultaneously
+    for(size_t axis = 0; axis < 3; axis++) {
+
+        threads.push_back(std::thread(moveOnAxisLambda, this, direction, axis));
+    }
+
+    // wait for the threads' finish
+    for(size_t axis = 0; axis < 3; axis++) {
+        threads.at(axis).join();
+    }
 
   }
 
@@ -138,6 +162,8 @@ class RingBufferBase {
       }
   }
 
+  // void setXSliceParallel(int slice_idx)
+
   inline bool insideVolume(const Vector3i &coord) {
 
       static const Vector3i
@@ -150,6 +176,11 @@ class RingBufferBase {
       }
 
       return res;
+  }
+
+  inline _Datatype & atIntIdx(int idx) {
+
+    return buffer_[idx];
   }
 
   inline _Datatype & at(const Vector3i &coord) {
