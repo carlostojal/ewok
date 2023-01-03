@@ -111,7 +111,7 @@ std::ofstream f_time;
 
 bool initialized = false;
 
-const double resolution = 0.1;
+const double resolution = 0.15;
 
 //ewok::QuasiEuclideanDistanceRingBuffer<POW> rrb(0.1, 1.0);
 ewok::EuclideanDistanceRingBuffer<POW> rrb(resolution, 1.0);
